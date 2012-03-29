@@ -1,0 +1,1 @@
+from base import register_factoryfrom apns.client import APNSServicedef apns_factory(**kwargs):    print "apns_factory " + kwargs    return APNSService(**kwargs)register_factory('apns', apns_factory)

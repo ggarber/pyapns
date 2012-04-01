@@ -7,11 +7,6 @@ from twisted.web.http_headers import Headers
 from zope.interface import implements
 from pypns.base import IPNSService, register_factory
 
-def c2dm_factory(**kwargs):
-    return C2DMService(**kwargs)
-
-register_factory('c2dm', c2dm_factory)
-
 CLIENT_LOGIN_URL = 'https://www.google.com/accounts/ClientLogin'
 C2DM_URL = 'https://android.apis.google.com/c2dm/send'
 
@@ -52,7 +47,7 @@ class C2DMService(service.Service):
                 'Content-Type': 'application/x-www-form-urlencoded'}),
             urllib.urlencode(values))
         d.addCallback(self)
-        d.addErrback(self.errback('c2dm-service-write'))
+        d.addErrback(log_errback('c2dm-service-write'))
         return d
 
     def get_token(self):
@@ -73,7 +68,7 @@ class C2DMService(service.Service):
             }),
             urllib.urlencode(values))
         d.addCallback(self.parse_token)
-        d.addErrback(self.errback('c2dm-service-write'))
+        d.addErrback(log_errback('c2dm-service-write'))
         return d
 
     def parse_token(self, response):
@@ -82,3 +77,9 @@ class C2DMService(service.Service):
         responseAsList = response.split('\n')
         self._token = responseAsList[2].split('=')[1]
         self.token =  None
+
+def log_errback(name):
+    def _log_errback(err, *args):
+        log.msg('errback in %s : %s' % (name, str(err)))
+        return err
+    return _log_errback

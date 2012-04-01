@@ -161,11 +161,10 @@ class APNSService(service.Service):
     clientProtocolFactory = APNSClientFactory
     feedbackProtocolFactory = APNSFeedbackClientFactory
 
-    def __init__(self, cert=cert_path, environment=environment, timeout=15):
-        log.msg('APNSService __init__')
+    def __init__(self, cert, environment, timeout=15):
         self.factory = None
-        self.environment = cert
-        self.cert_path = cert_path
+        self.environment = environment
+        self.cert_path = cert
         self.raw_mode = False
         self.timeout = timeout
 
@@ -204,7 +203,7 @@ class APNSService(service.Service):
                 return r
 
             d.addCallback(lambda p: p.sendMessage(notifications))
-            d.addErrback(self.errback('apns-service-write'))
+            d.addErrback(log_errback('apns-service-write'))
             d.addBoth(cancel_timeout)
             return d
 
@@ -218,11 +217,11 @@ class APNSService(service.Service):
             factory = self.feedbackProtocolFactory()
             context = self.getContextFactory()
             reactor.connectSSL(server, port, factory, context)
-            factory.deferred.addErrback(self.errback('apns-feedback-read'))
+            factory.deferred.addErrback(log_errback('apns-feedback-read'))
 
             timeout = reactor.callLater(self.timeout,
                 lambda: factory.deferred.called or factory.deferred.errback(
-                    Exception('Feedbcak fetch timed out after %i seconds' % self.timeout)))
+                    Exception('Feedback fetch timed out after %i seconds' % self.timeout)))
             def cancel_timeout(r):
                 try: timeout.cancel()
                 except: pass
@@ -230,7 +229,7 @@ class APNSService(service.Service):
 
             factory.deferred.addBoth(cancel_timeout)
         except Exception, e:
-            log.err('APNService feedback error initializing: %s' % str(e))
+            log.msg('APNService feedback error initializing: %s' % str(e))
             raise
         return factory.deferred
 
@@ -252,6 +251,6 @@ def encode_notifications(tokens, notifications):
 
 def log_errback(name):
     def _log_errback(err, *args):
-        log.err('errback in %s : %s' % (name, str(err)))
+        log.msg('errback in %s : %s' % (name, str(err)))
         return err
     return _log_errback

@@ -10,12 +10,6 @@ class IPNSService(Interface):
     def feedback(self):
         """ Read from the feedback service """
 
-    def errback(self, name):
-        def _log_errback(err, *args):
-            log.err('errback in %s : %s' % (name, str(err)))
-            return err
-        return _log_errback
-
 factories = {}
 services = {}
 

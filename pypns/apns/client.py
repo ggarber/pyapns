@@ -202,7 +202,12 @@ class APNSService(service.Service):
                 except: pass
                 return r
 
-            d.addCallback(lambda p: p.sendMessage(notifications))
+            def connected(protocol):
+                log.msg('APNSService connected, retrying sending')
+                protocol.sendMessage(notifications)
+                return protocol
+
+            d.addCallback(connected)
             d.addErrback(log_errback('apns-service-write'))
             d.addBoth(cancel_timeout)
             return d

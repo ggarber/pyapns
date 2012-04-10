@@ -60,7 +60,7 @@ class APNSProtocol(Protocol):
 
     def sendMessage(self, msg):
         log.msg('APNSProtocol sendMessage msg=%s' % binascii.hexlify(msg))
-        return self.transport.write(msg)
+        self.transport.write(msg)
 
     def connectionLost(self, reason):
         log.msg('APNSProtocol connectionLost')

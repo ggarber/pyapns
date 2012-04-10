@@ -11,7 +11,8 @@ CLIENT_LOGIN_URL = 'https://www.google.com/accounts/ClientLogin'
 C2DM_URL = 'https://android.apis.google.com/c2dm/send'
 
 class C2DMService(service.Service):
-    """ A Service that sends notifications to the C2DM Service
+    """
+    A Service that sends notifications to the C2DM Service
     """
 
     implements(IPNSService)
@@ -26,7 +27,9 @@ class C2DMService(service.Service):
         self.timeout = timeout
 
     def notify(self, registration_id, payload):
-        "Connect to the C2DM service and send notifications"
+        """
+        Connect to the C2DM service and send notifications
+        """
         if not self.token:
             return self.get_token().addCallback(lambda: self.send_notify(registration_id, payload))
 
@@ -46,7 +49,6 @@ class C2DMService(service.Service):
                 'Authorization': 'GoogleLogin auth=' + self.token,
                 'Content-Type': 'application/x-www-form-urlencoded'}),
             urllib.urlencode(values))
-        d.addCallback(self)
         d.addErrback(log_errback('c2dm-service-write'))
         return d
 
@@ -77,6 +79,7 @@ class C2DMService(service.Service):
         responseAsList = response.split('\n')
         self._token = responseAsList[2].split('=')[1]
         self.token =  None
+        return response
 
 def log_errback(name):
     def _log_errback(err, *args):

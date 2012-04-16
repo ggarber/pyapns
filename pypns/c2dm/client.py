@@ -14,6 +14,15 @@ from pypns.base import IPNSService
 CLIENT_LOGIN_URL = 'https://www.google.com/accounts/ClientLogin'
 C2DM_URL = 'https://android.apis.google.com/c2dm/send'
 
+class UnauthorizedException(Exception):
+    pass
+
+class InvalidRegistrationException(Exception):
+    pass
+
+class NotRegisteredException(Exception):
+    pass
+
 class BufferProtocol(Protocol):
     def __init__(self):
         self._buffer = ''
@@ -54,6 +63,11 @@ class C2DMService(service.Service):
     """
     implements(IPNSService)
 
+    ERRORS = {
+        'InvalidRegistration': InvalidRegistrationException,
+        'NotRegistered': NotRegisteredException
+    }
+
     def __init__(self, email, password, environment, timeout=15):
         log.msg('C2DMService __init__')
         self.agent = Agent(reactor)
@@ -74,7 +88,12 @@ class C2DMService(service.Service):
         if not self.token:
             self.token = yield self.get_token()
 
-        result = yield self.send_notify(registration_id, payload)
+        try:
+            result = yield self.send_notify(registration_id, payload)
+        except UnauthorizedException:
+            self.token = yield self.get_token()
+            result = yield self.send_notify(registration_id, payload)
+
         defer.returnValue(result)
 
     @defer.inlineCallbacks
@@ -96,6 +115,11 @@ class C2DMService(service.Service):
                 'Content-Type': ['application/x-www-form-urlencoded']}),
             BufferProducer(urllib.urlencode(values)))
 
+        if response.code == 401:
+            raise UnauthorizedException()
+        elif response.code != 200:
+            raise Exception('Invalid response code %d' % response.code)
+
         protocol = BufferProtocol()
         response.deliverBody(protocol)
 
@@ -105,7 +129,7 @@ class C2DMService(service.Service):
         key, val = responseAsList[0].split('=')
 
         if key == 'Error':
-            raise Exception('Error sending notification ' + val)
+            raise self.ERRORS.get(val, Exception)('Error sending notification ' + val)
 
         defer.returnValue(val)
 

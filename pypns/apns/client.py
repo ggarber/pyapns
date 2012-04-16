@@ -190,7 +190,7 @@ class APNSService(service.Service):
 
         client = self.factory.clientProtocol
         if client:
-            return client.sendMessage(notifications)
+            client.sendMessage(notifications)
         else:
             log.msg('APNSService waiting for connection')
             d = self.factory.deferred

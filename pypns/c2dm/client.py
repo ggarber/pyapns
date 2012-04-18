@@ -1,4 +1,5 @@
-import uuid
+import os
+import binascii
 import urllib
 from twisted.python import log
 from twisted.internet import reactor
@@ -101,7 +102,7 @@ class C2DMService(service.Service):
         log.msg('C2DMService.send_notify %s' % registration_id)
 
         values = {
-            'collapse_key' : str(uuid.uuid1()),
+            'collapse_key' : binascii.hexlify(os.urandom(16)),
             'registration_id' : registration_id,
             }
         for k,v in payload.iteritems():

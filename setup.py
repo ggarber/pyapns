@@ -2,7 +2,7 @@ from setuptools import setup, find_packages
 
 setup(
   name="pypns",
-  version="0.2.0",
+  version="0.3.0",
   description="Push Notification Gateway for Apple (APNS) and Google (C2DM) services.",
   author="ggarber",
   author_email="gustavogb@gmail.com",

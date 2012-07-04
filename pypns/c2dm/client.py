@@ -106,8 +106,9 @@ class C2DMService(service.Service):
             'registration_id' : registration_id,
             }
         for k,v in payload.iteritems():
-            values['data.%s' % k] = v
+            values['data.%s' % k] = v.encode('utf-8') if isinstance(v, basestring) else v
 
+        log.msg('C2DMService. starting request')
         response = yield self.agent.request(
             'POST',
             C2DM_URL,
@@ -115,6 +116,8 @@ class C2DMService(service.Service):
                 'Authorization': ['GoogleLogin auth=' + self.token],
                 'Content-Type': ['application/x-www-form-urlencoded']}),
             BufferProducer(urllib.urlencode(values)))
+
+        log.msg('C2DMService.response %s' % urllib.urlencode(values))
 
         if response.code == 401:
             raise UnauthorizedException()
@@ -125,6 +128,8 @@ class C2DMService(service.Service):
         response.deliverBody(protocol)
 
         response_content = yield protocol.done
+
+        log.msg('C2DMService.response %s' % response_content)
 
         responseAsList = response_content.split('\n')
         key, val = responseAsList[0].split('=')

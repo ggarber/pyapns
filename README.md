@@ -1,6 +1,11 @@
 pyapns
 ======
 
+== How to test ==
+
+Modify apns certificate path in tests/test_apns_client
+> trial tests
+
 A universal Apple Push Notification Service (APNS) provider.
 
 Features:
